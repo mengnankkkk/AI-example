@@ -1,0 +1,21 @@
+# MyBatis配置
+mybatis:
+  type-aliases-package: edu.qlu.chatbot.model
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    use-generated-keys: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  type-handlers-package: edu.qlu.chatbot.typehandler
+
+# MyBatis测试配置
+---
+spring:
+  profiles: test
+  
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
