@@ -3,6 +3,8 @@ package edu.qlu.chatbot;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -18,7 +20,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author AI Assistant
  * @version 1.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    HibernateJpaAutoConfiguration.class,
+    JpaRepositoriesAutoConfiguration.class
+})
 @EnableScheduling
 @MapperScan("edu.qlu.chatbot.mapper")
 public class AcademicAffairsChatbotApplication {

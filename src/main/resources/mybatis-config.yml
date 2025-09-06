@@ -14,8 +14,12 @@ mybatis:
 # MyBatis测试配置
 ---
 spring:
-  profiles: test
+  config:
+    activate:
+      on-profile: test
   
 mybatis:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    cache-enabled: false  # 测试时禁用缓存
+    lazy-loading-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 输出SQL日志

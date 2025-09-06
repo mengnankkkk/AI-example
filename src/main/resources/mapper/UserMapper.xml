@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="edu.qlu.chatbot.mapper.UserMapper">
+
+    <!-- 用户结果映射 -->
+    <resultMap id="UserResultMap" type="edu.qlu.chatbot.model.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="fullName" column="full_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="isActive" column="is_active"/>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="Base_Column_List">
+        id, username, email, phone, full_name, created_at, updated_at, is_active
+    </sql>
+
+    <!-- 根据ID查询用户 -->
+    <select id="findById" parameterType="long" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="findByUsername" parameterType="string" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <!-- 根据邮箱查询用户 -->
+    <select id="findByEmail" parameterType="string" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 查询所有激活的用户 -->
+    <select id="findAllActive" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE is_active = true
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询所有用户 -->
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 插入新用户 -->
+    <insert id="insert" parameterType="edu.qlu.chatbot.model.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (username, email, phone, full_name, created_at, updated_at, is_active)
+        VALUES (#{username}, #{email}, #{phone}, #{fullName}, 
+                COALESCE(#{createdAt}, CURRENT_TIMESTAMP), 
+                COALESCE(#{updatedAt}, CURRENT_TIMESTAMP), 
+                COALESCE(#{isActive}, true))
+    </insert>
+
+    <!-- 更新用户信息 -->
+    <update id="update" parameterType="edu.qlu.chatbot.model.User">
+        UPDATE users SET
+            username = #{username},
+            email = #{email},
+            phone = #{phone},
+            full_name = #{fullName},
+            updated_at = CURRENT_TIMESTAMP,
+            is_active = #{isActive}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 软删除用户 -->
+    <update id="softDelete" parameterType="long">
+        UPDATE users SET
+            is_active = false,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 物理删除用户 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+
+    <!-- 检查用户名是否存在 -->
+    <select id="existsByUsername" parameterType="string" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <!-- 检查邮箱是否存在 -->
+    <select id="existsByEmail" parameterType="string" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 分页查询用户 -->
+    <select id="findWithPagination" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username ILIKE CONCAT('%', #{keyword}, '%') 
+                     OR full_name ILIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="isActive != null">
+                AND is_active = #{isActive}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 统计符合条件的用户数量 -->
+    <select id="countWithCondition" resultType="long">
+        SELECT COUNT(*)
+        FROM users
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username ILIKE CONCAT('%', #{keyword}, '%') 
+                     OR full_name ILIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="isActive != null">
+                AND is_active = #{isActive}
+            </if>
+        </where>
+    </select>
+
+</mapper>

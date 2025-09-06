@@ -63,6 +63,12 @@
             <version>3.0.3</version>
         </dependency>
         
+        <!-- Spring Data JPA (for Repository interfaces) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
@@ -100,6 +106,38 @@
             <groupId>org.htmlunit</groupId>
             <artifactId>htmlunit</artifactId>
             <version>${htmlunit.version}</version>
+        </dependency>
+        
+        <!-- Voiceprint Processing Dependencies -->
+        <!-- HTTP Client for iFlytek API -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
+        
+        <!-- JSON Processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
+        <!-- Audio Processing (using Java Sound API extensions) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        
+        <!-- File Upload Support -->
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.5</version>
+        </dependency>
+        
+        <!-- Apache Commons Codec for Base64 -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
 
         <!-- Development Tools -->

@@ -151,6 +151,10 @@ public class KnowledgeDocument {
         this.vectorized = vectorized;
     }
 
+    public boolean isVectorized() {
+        return vectorized != null && vectorized;
+    }
+
     public ProcessingStatus getStatus() {
         return status;
     }

@@ -62,6 +62,76 @@ USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
 CREATE INDEX IF NOT EXISTS idx_chat_memory_conversation_id ON ai_chat_memory(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_chat_memory_created_at ON ai_chat_memory(created_at);
 
+# =============================================
+# 声纹识别相关表
+# =============================================
+
+# 用户表（假设系统中已有用户表，这里创建一个简化版本）
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(200),
+    phone VARCHAR(20),
+    full_name VARCHAR(200),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+# 声纹识别表 - 存储用户与讯飞声纹特征ID的映射关系
+CREATE TABLE IF NOT EXISTS voiceprints (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    iflytek_group_id VARCHAR(64) NOT NULL,
+    iflytek_feature_id VARCHAR(64) NOT NULL UNIQUE,
+    feature_info TEXT,
+    audio_file_name VARCHAR(255),
+    registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_identified_at TIMESTAMP WITH TIME ZONE,
+    identification_count INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+# 声纹识别日志表 - 记录每次识别操作的详细信息
+CREATE TABLE IF NOT EXISTS voiceprint_identification_logs (
+    id BIGSERIAL PRIMARY KEY,
+    request_id VARCHAR(100) NOT NULL,
+    identified_user_id BIGINT REFERENCES users(id),
+    iflytek_feature_id VARCHAR(64),
+    confidence_score DECIMAL(5,4),
+    audio_file_name VARCHAR(255),
+    identification_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    api_response_sid VARCHAR(100),
+    api_response_code INTEGER,
+    api_response_message TEXT,
+    processing_duration_ms INTEGER,
+    client_ip VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+# 创建声纹相关索引
+CREATE INDEX IF NOT EXISTS idx_voiceprints_user_id ON voiceprints(user_id);
+CREATE INDEX IF NOT EXISTS idx_voiceprints_iflytek_feature_id ON voiceprints(iflytek_feature_id);
+CREATE INDEX IF NOT EXISTS idx_voiceprints_iflytek_group_id ON voiceprints(iflytek_group_id);
+CREATE INDEX IF NOT EXISTS idx_voiceprints_is_active ON voiceprints(is_active);
+CREATE INDEX IF NOT EXISTS idx_voiceprints_registration_date ON voiceprints(registration_date);
+
+CREATE INDEX IF NOT EXISTS idx_voiceprint_logs_request_id ON voiceprint_identification_logs(request_id);
+CREATE INDEX IF NOT EXISTS idx_voiceprint_logs_user_id ON voiceprint_identification_logs(identified_user_id);
+CREATE INDEX IF NOT EXISTS idx_voiceprint_logs_identification_time ON voiceprint_identification_logs(identification_time);
+CREATE INDEX IF NOT EXISTS idx_voiceprint_logs_confidence_score ON voiceprint_identification_logs(confidence_score);
+
+# 插入示例用户数据
+INSERT INTO users (username, email, phone, full_name) VALUES
+('admin', 'admin@qlu.edu.cn', '18888888888', '系统管理员'),
+('zhangsan', 'zhangsan@qlu.edu.cn', '13111111111', '张三'),
+('lisi', 'lisi@qlu.edu.cn', '13222222222', '李四'),
+('wangwu', 'wangwu@qlu.edu.cn', '13333333333', '王五')
+ON CONFLICT (username) DO NOTHING;
+
 # 8. 创建数据库用户（可选）
 -- CREATE USER qlu_user WITH PASSWORD 'qlu_password';
 -- GRANT ALL PRIVILEGES ON DATABASE qlu_chatbot TO qlu_user;

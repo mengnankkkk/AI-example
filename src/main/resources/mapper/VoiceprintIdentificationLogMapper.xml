@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="edu.qlu.chatbot.mapper.VoiceprintIdentificationLogMapper">
+
+    <!-- 声纹识别日志结果映射 -->
+    <resultMap id="VoiceprintIdentificationLogResultMap" type="edu.qlu.chatbot.model.VoiceprintIdentificationLog">
+        <id property="id" column="id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="identifiedUserId" column="identified_user_id"/>
+        <result property="iflytekFeatureId" column="iflytek_feature_id"/>
+        <result property="confidenceScore" column="confidence_score"/>
+        <result property="audioFileName" column="audio_file_name"/>
+        <result property="identificationTime" column="identification_time"/>
+        <result property="apiResponseSid" column="api_response_sid"/>
+        <result property="apiResponseCode" column="api_response_code"/>
+        <result property="apiResponseMessage" column="api_response_message"/>
+        <result property="processingDurationMs" column="processing_duration_ms"/>
+        <result property="clientIp" column="client_ip"/>
+        <result property="userAgent" column="user_agent"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 包含用户信息的识别日志结果映射 -->
+    <resultMap id="VoiceprintIdentificationLogWithUserResultMap" type="edu.qlu.chatbot.model.VoiceprintIdentificationLog" extends="VoiceprintIdentificationLogResultMap">
+        <association property="identifiedUser" javaType="edu.qlu.chatbot.model.User">
+            <id property="id" column="identified_user_id"/>
+            <result property="username" column="username"/>
+            <result property="email" column="email"/>
+            <result property="phone" column="phone"/>
+            <result property="fullName" column="user_full_name"/>
+            <result property="createdAt" column="user_created_at"/>
+            <result property="updatedAt" column="user_updated_at"/>
+            <result property="isActive" column="user_is_active"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="Base_Column_List">
+        id, request_id, identified_user_id, iflytek_feature_id, confidence_score,
+        audio_file_name, identification_time, api_response_sid, api_response_code,
+        api_response_message, processing_duration_ms, client_ip, user_agent, created_at
+    </sql>
+
+    <!-- 包含用户信息的查询字段 -->
+    <sql id="Base_Column_List_With_User">
+        l.id, l.request_id, l.identified_user_id, l.iflytek_feature_id, l.confidence_score,
+        l.audio_file_name, l.identification_time, l.api_response_sid, l.api_response_code,
+        l.api_response_message, l.processing_duration_ms, l.client_ip, l.user_agent, l.created_at,
+        u.username, u.email, u.phone,
+        u.full_name as user_full_name, u.created_at as user_created_at,
+        u.updated_at as user_updated_at, u.is_active as user_is_active
+    </sql>
+
+    <!-- 根据ID查询识别日志 -->
+    <select id="findById" parameterType="long" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据请求ID查询识别日志 -->
+    <select id="findByRequestId" parameterType="string" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        WHERE request_id = #{requestId}
+    </select>
+
+    <!-- 根据用户ID查询识别日志 -->
+    <select id="findByUserId" parameterType="long" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        WHERE identified_user_id = #{userId}
+        ORDER BY identification_time DESC
+    </select>
+
+    <!-- 根据讯飞特征ID查询识别日志 -->
+    <select id="findByFeatureId" parameterType="string" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        WHERE iflytek_feature_id = #{featureId}
+        ORDER BY identification_time DESC
+    </select>
+
+    <!-- 根据时间范围查询识别日志 -->
+    <select id="findByTimeRange" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        WHERE identification_time >= #{startTime} AND identification_time <= #{endTime}
+        ORDER BY identification_time DESC
+    </select>
+
+    <!-- 查询最近的识别日志 -->
+    <select id="findRecent" parameterType="int" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        ORDER BY identification_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询所有识别日志（包含用户信息） -->
+    <select id="findAllWithUser" resultMap="VoiceprintIdentificationLogWithUserResultMap">
+        SELECT <include refid="Base_Column_List_With_User"/>
+        FROM voiceprint_identification_logs l
+        LEFT JOIN users u ON l.identified_user_id = u.id
+        ORDER BY l.identification_time DESC
+    </select>
+
+    <!-- 插入新的识别日志 -->
+    <insert id="insert" parameterType="edu.qlu.chatbot.model.VoiceprintIdentificationLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO voiceprint_identification_logs (
+            request_id, identified_user_id, iflytek_feature_id, confidence_score,
+            audio_file_name, identification_time, api_response_sid, api_response_code,
+            api_response_message, processing_duration_ms, client_ip, user_agent, created_at
+        ) VALUES (
+            #{requestId}, #{identifiedUserId}, #{iflytekFeatureId}, #{confidenceScore},
+            #{audioFileName}, 
+            COALESCE(#{identificationTime}, CURRENT_TIMESTAMP),
+            #{apiResponseSid}, #{apiResponseCode}, #{apiResponseMessage},
+            #{processingDurationMs}, #{clientIp}, #{userAgent},
+            COALESCE(#{createdAt}, CURRENT_TIMESTAMP)
+        )
+    </insert>
+
+    <!-- 更新识别日志 -->
+    <update id="update" parameterType="edu.qlu.chatbot.model.VoiceprintIdentificationLog">
+        UPDATE voiceprint_identification_logs SET
+            request_id = #{requestId},
+            identified_user_id = #{identifiedUserId},
+            iflytek_feature_id = #{iflytekFeatureId},
+            confidence_score = #{confidenceScore},
+            audio_file_name = #{audioFileName},
+            identification_time = #{identificationTime},
+            api_response_sid = #{apiResponseSid},
+            api_response_code = #{apiResponseCode},
+            api_response_message = #{apiResponseMessage},
+            processing_duration_ms = #{processingDurationMs},
+            client_ip = #{clientIp},
+            user_agent = #{userAgent}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 物理删除识别日志 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM voiceprint_identification_logs WHERE id = #{id}
+    </delete>
+
+    <!-- 根据时间范围批量删除识别日志 -->
+    <delete id="deleteBeforeTime">
+        DELETE FROM voiceprint_identification_logs 
+        WHERE identification_time < #{beforeTime}
+    </delete>
+
+    <!-- 统计识别日志总数 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM voiceprint_identification_logs
+    </select>
+
+    <!-- 统计指定用户的识别次数 -->
+    <select id="countByUserId" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM voiceprint_identification_logs
+        WHERE identified_user_id = #{userId}
+    </select>
+
+    <!-- 统计指定时间范围内的识别次数 -->
+    <select id="countByTimeRange" resultType="long">
+        SELECT COUNT(*)
+        FROM voiceprint_identification_logs
+        WHERE identification_time >= #{startTime} AND identification_time <= #{endTime}
+    </select>
+
+    <!-- 分页查询识别日志 -->
+    <select id="findWithPagination" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        <where>
+            <if test="userId != null">
+                AND identified_user_id = #{userId}
+            </if>
+            <if test="featureId != null and featureId != ''">
+                AND iflytek_feature_id = #{featureId}
+            </if>
+            <if test="startTime != null">
+                AND identification_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND identification_time <= #{endTime}
+            </if>
+        </where>
+        ORDER BY identification_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 统计符合条件的识别日志数量 -->
+    <select id="countWithCondition" resultType="long">
+        SELECT COUNT(*)
+        FROM voiceprint_identification_logs
+        <where>
+            <if test="userId != null">
+                AND identified_user_id = #{userId}
+            </if>
+            <if test="featureId != null and featureId != ''">
+                AND iflytek_feature_id = #{featureId}
+            </if>
+            <if test="startTime != null">
+                AND identification_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND identification_time <= #{endTime}
+            </if>
+        </where>
+    </select>
+
+    <!-- 获取识别统计信息 -->
+    <select id="getStatistics" parameterType="int" resultMap="VoiceprintIdentificationLogResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM voiceprint_identification_logs
+        WHERE identification_time >= CURRENT_TIMESTAMP - INTERVAL '#{days} days'
+        ORDER BY identification_time DESC
+    </select>
+
+</mapper>

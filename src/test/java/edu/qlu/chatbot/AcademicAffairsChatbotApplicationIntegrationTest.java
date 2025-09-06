@@ -35,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.*;
     "spring.sql.init.schema-locations=classpath:schema-test.sql",
     "mybatis.configuration.map-underscore-to-camel-case=true",
     // Mock AI配置
-    "spring.ai.alibaba.dashscope.api-key=test-key",
+    "spring.ai.dashscope.api-key=test-mock-key",
+    "spring.ai.dashscope.chat.api-key=test-mock-key", 
+    "spring.ai.alibaba.dashscope.api-key=test-mock-key",
     "spring.ai.alibaba.dashscope.chat.options.model=qwen-plus",
     // 禁用定时任务
     "app.data-collection.schedule=-",
